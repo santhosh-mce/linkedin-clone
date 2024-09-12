@@ -1,13 +1,16 @@
+// components/ProfileHeader.js
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "react-hot-toast";
-
 import { Camera, Clock, MapPin, UserCheck, UserPlus, X } from "lucide-react";
+import Modal from './Modal'; // Import the Modal component
 
 const ProfileHeader = ({ userData, onSave, isOwnProfile }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedData, setEditedData] = useState({});
+	const [showModal, setShowModal] = useState(false);
+	const [modalImage, setModalImage] = useState('');
 	const queryClient = useQueryClient();
 
 	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
@@ -148,13 +151,19 @@ const ProfileHeader = ({ userData, onSave, isOwnProfile }) => {
 		setIsEditing(false);
 	};
 
+	const handleImageClick = (imageUrl) => {
+		setModalImage(imageUrl);
+		setShowModal(true);
+	};
+
 	return (
 		<div className='bg-white shadow rounded-lg mb-6'>
 			<div
-				className='relative h-48 rounded-t-lg bg-cover bg-center'
+				className='relative h-48 rounded-t-lg bg-cover bg-center cursor-pointer'
 				style={{
 					backgroundImage: `url('${editedData.bannerImg || userData.bannerImg || "/banner.png"}')`,
 				}}
+				onClick={() => handleImageClick(editedData.bannerImg || userData.bannerImg || "/banner.png")}
 			>
 				{isEditing && (
 					<label className='absolute top-2 right-2 bg-white p-2 rounded-full shadow cursor-pointer'>
@@ -173,9 +182,10 @@ const ProfileHeader = ({ userData, onSave, isOwnProfile }) => {
 			<div className='p-4'>
 				<div className='relative -mt-20 mb-4'>
 					<img
-						className='w-32 h-32 rounded-full mx-auto object-cover'
+						className='w-32 h-32 rounded-full mx-auto object-cover cursor-pointer'
 						src={editedData.profilePicture || userData.profilePicture || "/avatar.png"}
 						alt={userData.name}
+						onClick={() => handleImageClick(editedData.profilePicture || userData.profilePicture || "/avatar.png")}
 					/>
 
 					{isEditing && (
@@ -233,8 +243,7 @@ const ProfileHeader = ({ userData, onSave, isOwnProfile }) => {
 				{isOwnProfile ? (
 					isEditing ? (
 						<button
-							className='w-full bg-primary text-white py-2 px-4 rounded-full hover:bg-primary-dark
-							 transition duration-300'
+							className='w-full bg-primary text-white py-2 px-4 rounded-full hover:bg-primary-dark transition duration-300'
 							onClick={handleSave}
 						>
 							Save Profile
@@ -242,8 +251,7 @@ const ProfileHeader = ({ userData, onSave, isOwnProfile }) => {
 					) : (
 						<button
 							onClick={() => setIsEditing(true)}
-							className='w-full bg-primary text-white py-2 px-4 rounded-full hover:bg-primary-dark
-							 transition duration-300'
+							className='w-full bg-primary text-white py-2 px-4 rounded-full hover:bg-primary-dark transition duration-300'
 						>
 							Edit Profile
 						</button>
@@ -252,7 +260,11 @@ const ProfileHeader = ({ userData, onSave, isOwnProfile }) => {
 					<div className='flex justify-center'>{renderConnectionButton()}</div>
 				)}
 			</div>
+
+			{/* Render the Modal */}
+			<Modal isOpen={showModal} onClose={() => setShowModal(false)} imageUrl={modalImage} />
 		</div>
 	);
 };
+
 export default ProfileHeader;

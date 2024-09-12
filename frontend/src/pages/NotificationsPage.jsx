@@ -87,7 +87,7 @@ const NotificationsPage = () => {
 				{relatedPost.image && (
 					<img src={relatedPost.image} alt='Post preview' className='w-10 h-10 object-cover rounded' />
 				)}
-				<div className='flex-1 overflow-hidden'>
+				<div className='flex-1 overflow-hidden lg:max-w-md md:max-w-sm hidden sm:block'>
 					<p className='text-sm text-gray-600 truncate'>{relatedPost.content}</p>
 				</div>
 				<ExternalLink size={14} className='text-gray-400' />
@@ -121,7 +121,7 @@ const NotificationsPage = () => {
 												<img
 													src={notification.relatedUser.profilePicture || "/avatar.png"}
 													alt={notification.relatedUser.name}
-													className='w-12 h-12 rounded-full object-cover'
+													className='md:w-12 md:h-12 w-5 h-5 rounded-full object-cover'
 												/>
 											</Link>
 
@@ -141,7 +141,7 @@ const NotificationsPage = () => {
 											</div>
 										</div>
 
-										<div className='flex gap-2'>
+										<div className='flex gap-2 '>
 											{!notification.read && (
 												<button
 													onClick={() => markAsReadMutation(notification._id)}

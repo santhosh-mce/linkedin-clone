@@ -1,20 +1,22 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { axiosInstance } from "../lib/axios";
-import toast from "react-hot-toast";
-import { Link, useParams } from "react-router-dom";
-import { Loader, MessageCircle, Send, Share2, ThumbsUp, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { axiosInstance } from '../lib/axios';
+import toast from 'react-hot-toast';
+import { Link, useParams } from 'react-router-dom';
+import { Loader, MessageCircle, Send, Share2, ThumbsUp, Trash2 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
-import PostAction from "./PostAction";
+import PostAction from './PostAction';
 
 const Post = ({ post }) => {
 	const { postId } = useParams();
-
-	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+	const { data: authUser } = useQuery({ queryKey: ['authUser'] });
 	const [showComments, setShowComments] = useState(false);
 	const [newComment, setNewComment] = useState("");
 	const [comments, setComments] = useState(post.comments || []);
+	const [isImagePopupOpen, setIsImagePopupOpen] = useState(false); // Popup state
+	const [popupImage, setPopupImage] = useState(""); // Current popup image
+
 	const isOwner = authUser._id === post.author._id;
 	const isLiked = post.likes.includes(authUser._id);
 
@@ -25,11 +27,11 @@ const Post = ({ post }) => {
 			await axiosInstance.delete(`/posts/delete/${post._id}`);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["posts"] });
-			toast.success("Post deleted successfully");
+			queryClient.invalidateQueries({ queryKey: ['posts'] });
+			toast.success('Post deleted successfully');
 		},
 		onError: (error) => {
-			toast.error(error.message);
+			toast.error(error.response?.data?.message || 'Failed to delete post');
 		},
 	});
 
@@ -38,11 +40,11 @@ const Post = ({ post }) => {
 			await axiosInstance.post(`/posts/${post._id}/comment`, { content: newComment });
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["posts"] });
-			toast.success("Comment added successfully");
+			queryClient.invalidateQueries({ queryKey: ['posts'] });
+			toast.success('Comment added successfully');
 		},
 		onError: (err) => {
-			toast.error(err.response.data.message || "Failed to add comment");
+			toast.error(err.response?.data?.message || 'Failed to add comment');
 		},
 	});
 
@@ -51,13 +53,16 @@ const Post = ({ post }) => {
 			await axiosInstance.post(`/posts/${post._id}/like`);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["posts"] });
-			queryClient.invalidateQueries({ queryKey: ["post", postId] });
+			queryClient.invalidateQueries({ queryKey: ['posts'] });
+			queryClient.invalidateQueries({ queryKey: ['post', postId] });
+		},
+		onError: (error) => {
+			toast.error(error.response?.data?.message || 'Failed to like post');
 		},
 	});
 
 	const handleDeletePost = () => {
-		if (!window.confirm("Are you sure you want to delete this post?")) return;
+		if (!window.confirm('Are you sure you want to delete this post?')) return;
 		deletePost();
 	};
 
@@ -70,7 +75,7 @@ const Post = ({ post }) => {
 		e.preventDefault();
 		if (newComment.trim()) {
 			createComment(newComment);
-			setNewComment("");
+			setNewComment('');
 			setComments([
 				...comments,
 				{
@@ -86,6 +91,16 @@ const Post = ({ post }) => {
 		}
 	};
 
+	const openImagePopup = (imageUrl) => {
+		setPopupImage(imageUrl);
+		setIsImagePopupOpen(true);
+	};
+
+	const closeImagePopup = () => {
+		setIsImagePopupOpen(false);
+		setPopupImage("");
+	};
+
 	return (
 		<div className='bg-secondary rounded-lg shadow mb-4'>
 			<div className='p-4'>
@@ -93,7 +108,7 @@ const Post = ({ post }) => {
 					<div className='flex items-center'>
 						<Link to={`/profile/${post?.author?.username}`}>
 							<img
-								src={post.author.profilePicture || "/avatar.png"}
+								src={post.author.profilePicture || '/avatar.png'}
 								alt={post.author.name}
 								className='size-10 rounded-full mr-3'
 							/>
@@ -116,11 +131,18 @@ const Post = ({ post }) => {
 					)}
 				</div>
 				<p className='mb-4'>{post.content}</p>
-				{post.image && <img src={post.image} alt='Post content' className='rounded-lg w-full mb-4' />}
+				{post.image && (
+					<img
+						src={post.image}
+						alt='Post content'
+						className='rounded-lg w-full mb-4 cursor-pointer'
+						onClick={() => openImagePopup(post.image)}
+					/>
+				)}
 
 				<div className='flex justify-between text-info'>
 					<PostAction
-						icon={<ThumbsUp size={18} className={isLiked ? "text-blue-500  fill-blue-300" : ""} />}
+						icon={<ThumbsUp size={18} className={isLiked ? 'text-blue-500  fill-blue-300' : ''} />}
 						text={`Like (${post.likes.length})`}
 						onClick={handleLikePost}
 					/>
@@ -140,7 +162,7 @@ const Post = ({ post }) => {
 						{comments.map((comment) => (
 							<div key={comment._id} className='mb-2 bg-base-100 p-2 rounded flex items-start'>
 								<img
-									src={comment.user.profilePicture || "/avatar.png"}
+									src={comment.user.profilePicture || '/avatar.png'}
 									alt={comment.user.name}
 									className='w-8 h-8 rounded-full mr-2 flex-shrink-0'
 								/>
@@ -176,7 +198,25 @@ const Post = ({ post }) => {
 					</form>
 				</div>
 			)}
+
+			{isImagePopupOpen && (
+				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
+					<div className='bg-white p-4 rounded-lg'>
+						<div className='relative'>
+							<img src={popupImage} alt='Popup' className='max-w-screen-md max-h-screen p-1' />
+							<button
+								onClick={closeImagePopup}
+								className='absolute -top-6 -right-4 text-stone-900 text-4xl'
+								aria-label='Close popup'
+							>
+								&times;
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };
+
 export default Post;
