@@ -203,7 +203,7 @@ const Post = ({ post }) => {
 				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
 					<div className='bg-white p-4 rounded-lg'>
 						<div className='relative'>
-							<img src={popupImage} alt='Popup' className='max-w-screen-md max-h-screen p-1' />
+							<img src={popupImage} alt='Popup' className='lg:max-w-screen-md md:max-w-screen-sm  md:max-h-screen p-1' />
 							<button
 								onClick={closeImagePopup}
 								className='absolute -top-6 -right-4 text-stone-900 text-4xl'
