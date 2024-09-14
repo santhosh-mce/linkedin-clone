@@ -119,12 +119,13 @@ const RecommendedUser = ({ user }) => {
 					alt={user.name}
 					className='w-12 h-12 rounded-full mr-3'
 				/>
+				</Link>
 				<div>
 					<h3 className='font-semibold text-sm'>{user.name}</h3>
-					<p className='text-xs text-info'>{user.headline}</p>
+					<p className='text-xs text-info '>{user.headline}</p>
+					<div className="">{renderButton()}</div>
 				</div>
-			</Link>
-			{renderButton()}
+			
 		</div>
 	);
 };
