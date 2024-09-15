@@ -1,4 +1,7 @@
 import User from "../models/user.model.js";
+import Post from "../models/post.model.js";
+import Notification from "../models/notification.model.js";
+import ConnectionRequest from "../models/connectionRequest.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendWelcomeEmail } from "../emails/emailHandlers.js";
@@ -105,4 +108,24 @@ export const getCurrentUser = async (req, res) => {
 		console.error("Error in getCurrentUser controller:", error);
 		res.status(500).json({ message: "Server error" });
 	}
+};
+
+export const deleteUserAndContent = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Optionally, delete related data first (posts, notifications, etc.)
+        await Post.deleteMany({ author: id });
+        await Notification.deleteMany({ user: id });
+        await ConnectionRequest.deleteMany({ requester: id });
+        await ConnectionRequest.deleteMany({ recipient: id });
+
+        // Delete the user account
+        await User.findByIdAndDelete(id);
+
+        res.status(200).json({ message: 'User account and associated data deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user and associated data:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
 };
